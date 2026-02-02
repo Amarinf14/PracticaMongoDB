@@ -43,7 +43,7 @@ public class Main {
             // En el JSON, "Total_amount" es un String, por lo que se requiere conversión [5, 7].
             System.out.println("c) Clientes con gasto total > 5.1€:");
             consultas.clientesGastoMayor51().forEach(doc -> 
-                System.out.println("   - ID: " + doc.get("Member_ID") + " | Total: " + doc.get("total")));
+                System.out.println("   - ID: " + doc.get("Member_ID") + " | Name: " + doc.get("Name") + " | Total: " + doc.get("total")));
 
             // d) Media de dinero en happy_hour
             // Procesa el promedio del campo "Total_amount" [7].
