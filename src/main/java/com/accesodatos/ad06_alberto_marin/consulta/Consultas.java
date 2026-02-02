@@ -6,7 +6,6 @@ import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.model.*;
 import java.util.Arrays;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 
 /**
  *
@@ -24,31 +23,45 @@ public class Consultas {
     public double mediaEdad() {
         // Se utiliza el framework de Aggregation con el acumulador avg
         Document resultado = collection.aggregate(Arrays.asList(
-                Aggregates.group(null, Accumulators.avg("media", "$Age"))
+                Aggregates.unwind("$member"),
+                Aggregates.group(null, Accumulators.avg("media", "$member.Age"))
         )).first();
         return resultado != null && resultado.get("media") != null ? ((Number) resultado.get("media")).doubleValue(): 0.0;
     }
 
     // b) Clientes con nivel de membresía >= 4 y edad > 35
-    public FindIterable<Document> clientesNivelEdad() {
+    public AggregateIterable<Document> clientesNivelEdad() {
         // Uso de Filters para combinar condiciones GTE (>=) y GT (>)
-        Bson filtro = Filters.and(
-                Filters.gte("Level_of_membership", 4),
-                Filters.gt("Age", 35)
-        );
-        return collection.find(filtro);
+        return collection.aggregate(Arrays.asList(
+                Aggregates.unwind("$member"),
+                Aggregates.match(Filters.and(
+                        Filters.gte("member.Level_of_membership", 4),
+                        Filters.gt("member.Age", 35)
+                )),
+                Aggregates.replaceRoot("$member") // Devolvemos el cliente directamente
+        ));
     }
 
     // c) Nombre e ID de clientes que gastaron > 5.1€ en happy_hour + cantidad
     public AggregateIterable<Document> clientesGastoMayor51() {
         // Dado que Total_amount es String en el JSON, se convierte a double
         return collection.aggregate(Arrays.asList(
-                Aggregates.project(Projections.fields(
-                        Projections.include("Name", "Member_ID"),
-                        // Cálculo: se suma el valor convertido de Total_amount y el campo cantidad
-                        new Document("total", new Document("$add", 
-                                Arrays.asList(new Document("$toDouble", "$Total_amount"), "$cantidad")))
+                Aggregates.unwind("$happy_hour_member"),
+                Aggregates.unwind("$member"),
+                
+                // Filtramos que el ID del gasto coincida con el ID del miembro
+                Aggregates.match(Filters.expr(
+                        new Document("$eq", Arrays.asList("$happy_hour_member.Member_ID", "$member.Member_ID"))
                 )),
+                
+                // Proyectamos los campos limpios para el Main
+                Aggregates.project(Projections.fields(
+                        Projections.computed("Member_ID", "$happy_hour_member.Member_ID"),
+                        Projections.computed("Name", "$member.Name"),
+                        Projections.computed("total", new Document("$toDouble", "$happy_hour_member.Total_amount"))
+                )),
+                
+                // Filtramos la cantidad mínima de gasto
                 Aggregates.match(Filters.gt("total", 5.1))
         ));
     }
@@ -57,8 +70,9 @@ public class Consultas {
     public double mediaGastoHappyHour() {
         // Conversión de Total_amount (String) a Double para calcular el promedio
         Document resultado = collection.aggregate(Arrays.asList(
+                Aggregates.unwind("$happy_hour_member"),
                 Aggregates.group(null, Accumulators.avg("mediaGasto", 
-                        new Document("$toDouble", "$Total_amount")))
+                        new Document("$toDouble", "$happy_hour_member.Total_amount")))
         )).first();
         return resultado != null && resultado.get("mediaGasto") != null ? resultado.getDouble("mediaGasto") : 0.0;
     }
@@ -67,15 +81,19 @@ public class Consultas {
     public AggregateIterable<Document> clientesMas15Min() {
         // Filtro por Time_of_purchase, ordenación por Name y proyección del nombre
         return collection.aggregate(Arrays.asList(
-                Aggregates.match(Filters.gt("Time_of_purchase", 15)),
-                Aggregates.sort(Sorts.ascending("Name")),
-                Aggregates.project(Projections.include("Name"))
+                Aggregates.unwind("$member"),
+                Aggregates.match(Filters.gt("member.Time_of_purchase", 15)),
+                Aggregates.sort(Sorts.descending("member.Time_of_purchase")),
+                Aggregates.project(Projections.computed("Name", "$member.Name"))
         ));
     }
 
     // f) Todos los datos clientes tarjeta "Black"
-    public FindIterable<Document> clientesTarjetaBlack() {
-        // Operación CRUD simple utilizando el filtro de igualdad
-        return collection.find(Filters.eq("Membership_card", "Black"));
+    public AggregateIterable<Document> clientesTarjetaBlack() {
+        return collection.aggregate(Arrays.asList(
+                Aggregates.unwind("$member"),
+                Aggregates.match(Filters.eq("member.Membership_card", "Black")),
+                Aggregates.replaceRoot("$member")
+        ));
     }
 }
