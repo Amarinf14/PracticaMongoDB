@@ -26,7 +26,7 @@ public class Consultas {
         Document resultado = collection.aggregate(Arrays.asList(
                 Aggregates.group(null, Accumulators.avg("media", "$Age"))
         )).first();
-        return resultado != null && resultado.get("media") != null ? resultado.getDouble("media") : 0.0;
+        return resultado != null && resultado.get("media") != null ? ((Number) resultado.get("media")).doubleValue(): 0.0;
     }
 
     // b) Clientes con nivel de membresía >= 4 y edad > 35
