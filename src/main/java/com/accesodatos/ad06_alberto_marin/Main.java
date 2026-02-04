@@ -9,8 +9,9 @@ import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 
 /**
- *
- * @author macra
+ * Clase principal del proyecto
+ * 
+ * @author Alberto Marín Fernández
  */
 public class Main {
     public static void main(String[] args) {
@@ -32,40 +33,34 @@ public class Main {
             
             operacion.insertarCliente();
             operacion.modificarCliente();
-            //operacion.borrarCliente();
+            operacion.borrarCliente();
 
-            // 5. Instanciar la lógica de consultas
+            // 5. Instanciar la lógica de las consultas
             Consultas consultas = new Consultas(coleccion);
-            System.out.println("=== RESULTADOS DE LAS OPERACIONES MONGO ===\n");
+            System.out.println("=== RESULTADOS DE LAS CONSULTAS MONGO ===\n");
 
             // a) Media de edad de los clientes
-            // Utiliza el campo "Age" del JSON [4].
             System.out.printf("a) Media de edad: %.2f años%n", consultas.mediaEdad());
 
             // b) Clientes con membresía >= 4 y edad > 35
-            // Filtra por "Level_of_membership" y "Age" [4, 6].
             System.out.println("b) Clientes Nivel >= 4 y Edad > 35:");
             consultas.clientesNivelEdad().forEach(doc -> 
                 System.out.println("   - " + doc.getString("Name")));
 
             // c) Nombre e ID con gasto > 5.1€
-            // En el JSON, "Total_amount" es un String, por lo que se requiere conversión [5, 7].
             System.out.println("c) Clientes con gasto total > 5.1€:");
             consultas.clientesGastoMayor51().forEach(doc -> 
                 System.out.println("   - ID: " + doc.get("Member_ID") + " | Name: " + doc.get("Name") + " | Total: " + doc.get("total")));
 
             // d) Media de dinero en happy_hour
-            // Procesa el promedio del campo "Total_amount" [7].
             System.out.printf("d) Media gasto Happy Hour: %.2f€%n", consultas.mediaGastoHappyHour());
 
             // e) Clientes > 15 min compra, orden alfabético
-            // Filtra por "Time_of_purchase" y ordena por "Name" [4, 8].
             System.out.println("e) Clientes con compra > 15 min (Ordenados):");
             consultas.clientesMas15Min().forEach(doc -> 
                 System.out.println("   - " + doc.getString("Name")));
 
             // f) Todos los datos de clientes tarjeta "Black"
-            // Busca coincidencia exacta con "Membership_card": "Black" [4, 6].
             System.out.println("f) Listado de miembros con tarjeta Black:");
             consultas.clientesTarjetaBlack().forEach(doc -> 
                 System.out.println("   - " + doc.toJson()));

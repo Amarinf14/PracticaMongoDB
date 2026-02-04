@@ -8,18 +8,29 @@ import java.util.Arrays;
 import org.bson.Document;
 
 /**
- *
- * @author macra
+ * Contiene métodos para realizar operaciones CRUD sobre una colección MongoDB
+ * Se trabaja directamente sobre los documentos mediante la API oficial de MongoDB para Java.
+ * 
+ * @author Alberto Marín Fernández
  */
 public class Operacion {
 
+    // Referencia a la colección MongoDB
     private MongoCollection<Document> collection;
 
+    /**
+     * Constructor de la clase
+     * Recibe la colección sobre la que se realizarán las operaciones
+     */
     public Operacion(MongoCollection<Document> collection) {
         this.collection = collection;
     }
 
-    // a) INSERTAR un nuevo cliente en la colección con mi nombre y apellido
+    /**
+     * a) INSERTAR un nuevo cliente en la colección
+     *
+     * Creamos un documento con los datos del cliente y se añade al array "member" usando el operador $push
+     */
     public void insertarCliente() {
 
         // Creamos el nuevo cliente con una estructura idéntica al JSON
@@ -32,10 +43,10 @@ public class Operacion {
                 .append("Level_of_membership", 1)
                 .append("Address", "Santoña");
 
-        // Insertamos el cliente
+        // Insertamos el cliente dentro del array 'member'
         collection.updateOne(
-                Filters.exists("member"),
-                Updates.push("member", nuevoCliente)
+                Filters.exists("member"), // Localizamos el documento que contiene al array
+                Updates.push("member", nuevoCliente) // Añadimos eñ nuevo cliente
         );
 
         // Mostramos todos los clientes
@@ -43,11 +54,17 @@ public class Operacion {
         mostrarClientes();
     }
 
-    // b) MODIFICAR el cliente con mi nombre para que tenga un tiempo de compra de '99'
+    /**
+     * b) MODIFICAR el cliente con nombre "Marín, Alberto"
+     *
+     * Actualizamos el campo Time_of_purchase a 99 utilizando filtros sobre arrays
+     */
     public void modificarCliente() {
         collection.updateOne(
-                Filters.eq("member.Name", "Marín, Alberto"),
-                Updates.set("member.$[cliente].Time_of_purchase", 99),
+                Filters.eq("member.Name", "Marín, Alberto"), // Localizamos el documento que contiene al cliente mediante su nombre
+                Updates.set("member.$[cliente].Time_of_purchase", 99), // Modificamos el campo del cliente encontrado
+                
+                // ArrayFilters permite aplicar el cambio solo al elemento del array que cumpla la condición
                 new UpdateOptions().arrayFilters(
                         Arrays.asList(
                                 Filters.eq("cliente.Name", "Marín, Alberto")
@@ -60,16 +77,19 @@ public class Operacion {
         mostrarClientes();
     }
 
-    // c) BORRAR al cliente con mi nombre
+    /**
+     * c) BORRAR el cliente previamente modificado
+     *
+     * Eliminamos del array "member" el documento cuyo Time_of_purchase sea 99
+     */
     public void borrarCliente() {
-
-        // Como filtro de búsqueda, tendremos 'Time_of_purchase = 99'
+        
         collection.updateOne(
-                Filters.exists("member"),
+                Filters.exists("member"), // Localizamos el documento que contiene al array
                 Updates.pull(
                         "member",
                         new Document("Time_of_purchase", 99)
-                )
+                ) // Eliminamos del array el objeto que cumpla el criterioo
         );
         
         // Mostramos todos los clientes
@@ -78,12 +98,16 @@ public class Operacion {
     }
 
     /**
-     * === MÉTODO AUXILIAR ===
+     * MÉTODO AUXILIAR
+     *
+     * Recupera el primer documento de la colección y muestra por consola todos los clientes almacenados dentro del array "member"
      */
-    // Mostrar clientes
     private void mostrarClientes() {
+        
+        // Obtenemos el primer documento de la colección
         Document doc = collection.find().first();
         if (doc != null) {
+            // Recorremos la lista "member" y mostramos cada cliente en formato JSON
             doc.getList("member", Document.class)
                     .forEach(cliente
                             -> System.out.println(" - " + cliente.toJson()));

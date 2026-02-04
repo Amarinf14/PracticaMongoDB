@@ -10,17 +10,15 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
 /**
- *
- * @author macra
+ * Clase para establecer conexión con MongoDB Atlas y obtener acceso a bases de datos y colecciones
+ * 
+ * @author Alberto Marín Fernández
  */
 public class Conexion {
 
-    private static String dbNombre = "tarea06_Alberto_Marin";
-    private static String usuario = "tarea06";
-    private static String password = "tarea06";
-
-    private static MongoClient mongoClient;
-    private static MongoDatabase database;
+    private static String dbNombre;
+    private static String usuario;
+    private static String password;
 
     /**
      * Constructor de la clase Conexion.
