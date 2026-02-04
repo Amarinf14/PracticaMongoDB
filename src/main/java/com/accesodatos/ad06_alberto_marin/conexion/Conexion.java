@@ -11,7 +11,7 @@ import org.bson.Document;
 
 /**
  *
- * @author dam207
+ * @author macra
  */
 public class Conexion {
 

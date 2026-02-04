@@ -1,7 +1,6 @@
 package com.accesodatos.ad06_alberto_marin.consulta;
 
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.model.*;
 import java.util.Arrays;
@@ -9,7 +8,7 @@ import org.bson.Document;
 
 /**
  *
- * @author dam207
+ * @author macra
  */
 public class Consultas {
 

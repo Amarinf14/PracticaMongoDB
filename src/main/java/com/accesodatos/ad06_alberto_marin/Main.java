@@ -2,6 +2,7 @@ package com.accesodatos.ad06_alberto_marin;
 
 import com.accesodatos.ad06_alberto_marin.conexion.Conexion;
 import com.accesodatos.ad06_alberto_marin.consulta.Consultas;
+import com.accesodatos.ad06_alberto_marin.operacion.Operacion;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoCollection;
@@ -9,7 +10,7 @@ import org.bson.Document;
 
 /**
  *
- * @author dam207
+ * @author macra
  */
 public class Main {
     public static void main(String[] args) {
@@ -24,8 +25,16 @@ public class Main {
             
             // 3. Obtener las colecciones definidas en el archivo JSON
             MongoCollection<Document> coleccion = conexion.getColeccion(db, "coffe_shop");
+            
+            // 4. Instanciar la lógica de las operaciones
+            Operacion operacion = new Operacion(coleccion);
+            System.out.println("\n=== RESULTADOS DE LAS OPERACIONES MONGO ===\n");
+            
+            operacion.insertarCliente();
+            operacion.modificarCliente();
+            //operacion.borrarCliente();
 
-            // 4. Instanciar la lógica de consultas
+            // 5. Instanciar la lógica de consultas
             Consultas consultas = new Consultas(coleccion);
             System.out.println("=== RESULTADOS DE LAS OPERACIONES MONGO ===\n");
 
